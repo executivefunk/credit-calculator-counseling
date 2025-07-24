@@ -742,8 +742,26 @@ let weeksRemaining = endWeek - startWeek + 1 - uniqueSkips.length;
         return;
       }
 
-      const weeklyAvg = (totalCredits / weeksRemaining).toFixed(2);
-      const weeklyAvgNum = parseFloat(weeklyAvg);
+     const weeklyAvg = (totalCredits / weeksRemaining).toFixed(2);
+const weeklyAvgNum = parseFloat(weeklyAvg);
+
+// 🔍 Dual Enrollment Candidacy Check
+const adjustedCredits = totalCredits - 10;
+let dualEnrollmentMessage = "✅ Safe for Dual Enrollment";
+
+if (weeklyAvgNum >= 2.7) {
+  dualEnrollmentMessage = "🚫 Not Advisable – Already averaging 2.7+";
+} else if (adjustedCredits >= 60 && weeksRemaining <= 28) {
+  dualEnrollmentMessage = "🚫 Not Advisable – Too tight even with DE credit reduction";
+} else if (adjustedCredits >= 41 && adjustedCredits <= 59) {
+  if (weeksRemaining >= 30) {
+    dualEnrollmentMessage = "✅ Mostly Safe – Check workload habits";
+  } else if (weeksRemaining >= 24 && weeksRemaining <= 29) {
+    dualEnrollmentMessage = "⚠️ Caution – Only if Vista Real work continues during DE";
+  }
+} else if (adjustedCredits <= 40 && weeksRemaining >= 26) {
+  dualEnrollmentMessage = "✅ Safe – Plenty of buffer";
+}
 
       let suggestion = "";
       let riskLevel = "✅ Low Risk";
@@ -857,6 +875,7 @@ planBNote += `</li>`;
   <p><strong>${getText("Credits Needed")}:</strong> ${totalCredits}</p>
   <p><strong>${getText("Weeks Remaining")}:</strong> ${weeksRemaining}</p>
   <p><strong>${getText("Average Credits per Week")}:</strong> ${weeklyAvg}</p>
+  <p><strong>Dual Enrollment:</strong> ${dualEnrollmentMessage}</p>
   <p><strong>${getText("Risk Level")}:</strong> ${getText(riskLevel)}</p>
   <p><strong>${getText("Suggestion")}:</strong> ${getText(suggestion)}</p>
   ${bufferWarning}
