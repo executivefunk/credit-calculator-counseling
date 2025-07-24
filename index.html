@@ -747,7 +747,7 @@ const weeklyAvgNum = parseFloat(weeklyAvg);
 
 // 🔍 Dual Enrollment Candidacy Check
 const adjustedCredits = totalCredits - 10;
-const dualEnrollmentWeeklyAvg = adjustedCredits / weeksRemaining;
+const dualEnrollmentWeeklyAvg = totalCredits / weeksRemaining; // No more -10
 
 let dualEnrollmentMessage = "";
 
@@ -756,9 +756,9 @@ if (dualEnrollmentWeeklyAvg <= 1.5) {
 } else if (dualEnrollmentWeeklyAvg <= 2.0) {
   dualEnrollmentMessage = "✅ Mostly Safe – Reasonable, monitor consistency";
 } else if (dualEnrollmentWeeklyAvg <= 2.5) {
-  dualEnrollmentMessage = "⚠️ Caution – Only if Vista Real work continues during DE";
+  dualEnrollmentMessage = "⚠️ Caution – Only if student consistently completes Vista Real work";
 } else {
-  dualEnrollmentMessage = "🚫 Not Advisable – Too demanding, likely to fall behind";
+  dualEnrollmentMessage = "🚫 Not Advisable – Weekly pace too high; DE likely to cause setbacks";
 }
 
       let suggestion = "";
