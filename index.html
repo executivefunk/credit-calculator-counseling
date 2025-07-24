@@ -747,20 +747,18 @@ const weeklyAvgNum = parseFloat(weeklyAvg);
 
 // 🔍 Dual Enrollment Candidacy Check
 const adjustedCredits = totalCredits - 10;
-let dualEnrollmentMessage = "✅ Safe for Dual Enrollment";
+const dualEnrollmentWeeklyAvg = adjustedCredits / weeksRemaining;
 
-if (weeklyAvgNum >= 2.7) {
-  dualEnrollmentMessage = "🚫 Not Advisable – Already averaging 2.7+";
-} else if (adjustedCredits >= 60 && weeksRemaining <= 28) {
-  dualEnrollmentMessage = "🚫 Not Advisable – Too tight even with DE credit reduction";
-} else if (adjustedCredits >= 41 && adjustedCredits <= 59) {
-  if (weeksRemaining >= 30) {
-    dualEnrollmentMessage = "✅ Mostly Safe – Check workload habits";
-  } else if (weeksRemaining >= 24 && weeksRemaining <= 29) {
-    dualEnrollmentMessage = "⚠️ Caution – Only if Vista Real work continues during DE";
-  }
-} else if (adjustedCredits <= 40 && weeksRemaining >= 26) {
-  dualEnrollmentMessage = "✅ Safe – Plenty of buffer";
+let dualEnrollmentMessage = "";
+
+if (dualEnrollmentWeeklyAvg <= 1.5) {
+  dualEnrollmentMessage = "✅ Safe – Strong buffer and manageable load";
+} else if (dualEnrollmentWeeklyAvg <= 2.0) {
+  dualEnrollmentMessage = "✅ Mostly Safe – Reasonable, monitor consistency";
+} else if (dualEnrollmentWeeklyAvg <= 2.5) {
+  dualEnrollmentMessage = "⚠️ Caution – Only if Vista Real work continues during DE";
+} else {
+  dualEnrollmentMessage = "🚫 Not Advisable – Too demanding, likely to fall behind";
 }
 
       let suggestion = "";
