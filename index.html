@@ -888,33 +888,11 @@ if (weeklyAvgNum < 2.0) {
 }
 
 let planCNote = `<li><strong>${getText("Plan C")}:</strong> ${planCText}</li>`;
-      // ✅ Dual Enrollment Recommendation
-const dualEnrollmentWeeklyAvg = totalCredits / weeksRemaining;
-let dualEnrollmentMessage = "";
-
-if (dualEnrollmentWeeklyAvg <= 1.5) {
-  dualEnrollmentMessage = isSpanish
-    ? "✅ Seguro – Carga manejable y con buen margen"
-    : "✅ Safe – Strong buffer and manageable load";
-} else if (dualEnrollmentWeeklyAvg <= 2.0) {
-  dualEnrollmentMessage = isSpanish
-    ? "✅ Mayormente seguro – Razonable, pero monitorear consistencia"
-    : "✅ Mostly Safe – Reasonable, monitor consistency";
-} else if (dualEnrollmentWeeklyAvg <= 2.5) {
-  dualEnrollmentMessage = isSpanish
-    ? "⚠️ Precaución – Solo si el estudiante demuestra alta constancia."
-    : "⚠️ Caution – Only consider if student is highly consistent";
-} else {
-  dualEnrollmentMessage = isSpanish
-    ? "🚫 No recomendable – Ritmo semanal alto; DE podría causar retrasos"
-    : "🚫 Not Advisable – Weekly pace too high; DE likely to cause setbacks";
-}
 
       const result = `
   <p><strong>${getText("Credits Needed")}:</strong> ${totalCredits}</p>
   <p><strong>${getText("Weeks Remaining")}:</strong> ${weeksRemaining}</p>
   <p><strong>${getText("Average Credits per Week")}:</strong> ${weeklyAvg}</p>
-  <p><strong>Dual Enrollment:</strong> ${dualEnrollmentMessage}</p>
   <p><strong>${getText("Risk Level")}:</strong> ${getText(riskLevel)}</p>
   <p><strong>${getText("Suggestion")}:</strong> ${getText(suggestion)}</p>
   ${bufferWarning}
