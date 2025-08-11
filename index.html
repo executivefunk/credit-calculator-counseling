@@ -1201,13 +1201,18 @@ distribution = [
   let currentWeek = "Outside of school year";
 
   for (let i = dateRanges.length - 1; i > 0; i--) {
-    const [year, month, day] = dateRanges[i].split("-").map(Number);
-    const weekStart = new Date(year, month - 1, day); // Month is 0-indexed
-    if (today >= weekStart) {
-      currentWeek = i;
-      break;
-    }
+  const [year, month, day] = dateRanges[i].split("-").map(Number);
+  const weekStart = new Date(year, month - 1, day); // Month is 0-indexed
+  if (today >= weekStart) {
+    currentWeek = i;
+
+    // ✅ Auto-set "What week are you starting from?"
+    const startWeekSelect = document.getElementById("startWeek");
+    if (startWeekSelect) startWeekSelect.value = currentWeek;
+
+    break;
   }
+}
 
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const formattedDate = today.toLocaleDateString(isSpanish ? "es-ES" : "en-US", options);
