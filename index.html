@@ -640,6 +640,15 @@ const weeks = [
     document.getElementById("skipThanksgiving").checked = false;
     document.getElementById("skipWinter").checked = false;
     document.getElementById("skipSpring").checked = false;
+
+    // ✅ Add this block to also reset custom skip checkboxes
+    for (let i = 1; i <= 4; i++) {
+      const cb = document.getElementById(`customSkip${i}`);
+      const sel = document.getElementById(`customWeek${i}`);
+      if (cb) cb.checked = false;
+      if (sel) sel.selectedIndex = 0;
+    }
+
     document.getElementById("result").innerHTML = "";
     document.getElementById("planButtons").style.display = "none";
     lastResultData = null;
@@ -784,8 +793,6 @@ let bufferWarning = bufferWarningKey ? `<div class='warning'>${getText(bufferWar
 
       const strongStart = startWeek <= 10 ? `<p><strong>Strong Start Tip:</strong> Try completing 3 credits/week for the first 6 weeks. You can slow down later.</p>` : "";
 
-      const oneCreditWeeks = Math.max(0, Math.min(totalCredits, weeksRemaining, weeksRemaining * 2 - totalCredits));
-
       const fullWeeksAt3 = Math.floor(totalCredits / 3);
       const remainder = totalCredits % 3;
       let planB = remainder === 0 ? `3 credits/week for ${fullWeeksAt3} weeks - (${fullWeeksAt3} weeks total)` : `3 credits/week for ${fullWeeksAt3} weeks + 1 week of ${remainder} credit${remainder > 1 ? 's' : ''} - (${fullWeeksAt3 + 1} weeks total)`;
@@ -871,16 +878,34 @@ if (planBWeeks > weeksRemaining) {
   planBNote += ` <span style="color: red;">${getText("exceeds_weeks_by").replace("{z}", diff)}</span>`;
 }
 planBNote += `</li>`;
-      let planCText = "";
 
-if (weeklyAvgNum < 2.0) {
+// ✅ Correct Plan C math:
+// W = weeksRemaining (usable weeks), C = totalCredits
+// If C <= W: we can do C weeks @1 and leave (W - C) weeks @0
+// If W < C <= 2W: we can do (2W - C) weeks @1 and the rest @2
+// If C > 2W: Plan C not feasible (0 weeks @1)
+let oneCreditWeeks = 0;
+if (totalCredits <= weeksRemaining) {
+  oneCreditWeeks = totalCredits;
+} else if (totalCredits <= 2 * weeksRemaining) {
+  oneCreditWeeks = (2 * weeksRemaining) - totalCredits;
+} else {
+  oneCreditWeeks = 0;
+}
+
+// ✅ Text rules:
+// - If C <= W  → "You can afford {C} week(s) at 1 credit"  (no clause)
+// - If W < C <= 2W → "You can afford up to {oneCreditWeeks} week(s) at 1 credit if the rest average 2+"
+// - If C > 2W → "You can afford 0 week(s) at 1 credit"
+let planCText = "";
+if (totalCredits <= weeksRemaining) {
+  planCText = isSpanish
+    ? `Puedes tener ${oneCreditWeeks} semana(s) de 1 crédito`
+    : `You can afford ${oneCreditWeeks} week(s) at 1 credit`;
+} else if (totalCredits <= 2 * weeksRemaining) {
   planCText = isSpanish
     ? `Puedes tener hasta ${oneCreditWeeks} semana(s) de 1 crédito si el resto promedia 2 o más`
     : `You can afford up to ${oneCreditWeeks} week(s) at 1 credit if the rest average 2+`;
-} else if (weeklyAvgNum === 2.0) {
-  planCText = isSpanish
-    ? `Puedes tener 0 semana(s) de 1 crédito si el resto promedia 2 o más`
-    : `You can afford 0 week(s) at 1 credit if the rest average 2+`;
 } else {
   planCText = isSpanish
     ? `Puedes tener 0 semana(s) de 1 crédito`
@@ -924,9 +949,9 @@ let planCNote = `<li><strong>${getText("Plan C")}:</strong> ${planCText}</li>`;
 
       // Disable Plan C button if Plan A exceeds weeks
 const planCButton = document.querySelector('button[onclick="generatePlan(\'C\')"]');
-if (planAWeeks > weeksRemaining) {
+if (totalCredits > 2 * weeksRemaining) {
   planCButton.disabled = true;
-  planCButton.title = "Disabled: 2 credits/week will not be enough to finish on time.";
+  planCButton.title = "Disabled: Plan C needs 1–2 credits/week, which can't reach your total in time.";
 } else {
   planCButton.disabled = false;
   planCButton.title = "";
@@ -1050,9 +1075,29 @@ distribution = [
     if (rem > 0) distribution.push(rem);
   }
   if (type === 'C') {
-    const twoWeeks = usableWeekCount - oneCreditWeeks;
-    distribution = [...Array(twoWeeks).fill(2), ...Array(oneCreditWeeks).fill(1)];
+  // Recompute with usableWeekCount (skips already removed)
+  const W = usableWeekCount;
+  const C = totalCredits;
+
+  if (C <= W) {
+    // C weeks @1, (W - C) weeks @0
+    distribution = [
+      ...Array(C).fill(1),
+      ...Array(W - C).fill(0)
+    ];
+  } else if (C <= 2 * W) {
+    // Base 1 each → W credits; need (C - W) extra +1's → those weeks become 2
+    const extras = C - W;                  // number of 2-credit weeks
+    const ones   = W - extras;             // remaining 1-credit weeks
+    distribution = [
+      ...Array(extras).fill(2),
+      ...Array(ones).fill(1)
+    ];
+  } else {
+    // Not feasible under Plan C (cap is 2 per week). Fill with 2's so the table is honest.
+    distribution = Array(W).fill(2);
   }
+}
   if (type === 'D') {
     const part1 = Array(8).fill(3);
     const rem = totalCredits - 24;
@@ -1317,13 +1362,10 @@ if (skipBoxTitleEl) {
   skipBoxTitleEl.textContent = getText("Weeks You Plan to Skip (Optional):");
 }
 
-  setTimeout(() => {
-    populateWeekDropdowns();
-    document.getElementById("endWeek").value = "46";
-  }, 0);
-
-  renderResult();
-  displayCurrentDateAndWeek();
+  populateWeekDropdowns();
+document.getElementById("endWeek").value = "46";
+displayCurrentDateAndWeek(); // <-- sets startWeek to the current week
+renderResult();
 }
     
     function toggleLanguage() {
@@ -1359,12 +1401,10 @@ if (skipBoxTitleEl) {
   }
 
   // ✅ Refresh dropdowns with a small delay
-  setTimeout(() => {
-    populateWeekDropdowns();
-    document.getElementById("endWeek").value = "46";
-  }, 0);
-    renderResult();  // ✅ This goes here to refresh output language
-    displayCurrentDateAndWeek(); // ✅ Refresh current week label in the new language
+  populateWeekDropdowns();
+document.getElementById("endWeek").value = "46";
+displayCurrentDateAndWeek(); // <-- sets startWeek to the current week
+renderResult();
 }
 document.addEventListener("DOMContentLoaded", () => {
   populateWeekDropdowns();
